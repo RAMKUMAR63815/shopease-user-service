@@ -1,9 +1,0 @@
-ALTER USER 'root'@'%' IDENTIFIED BY 'NEW_ROOT_PASSWORD';
-
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'NEW_ROOT_PASSWORD';
-
-ALTER USER 'shopease_auth_user'@'%' IDENTIFIED BY 'NEW_APP_PASSWORD';
-
-GRANT ALL PRIVILEGES ON shopease_auth_db.* TO 'shopease_auth_user'@'%';
-
-FLUSH PRIVILEGES;
