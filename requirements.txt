@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy>=2.0,<3.0
+pymysql
+alembic
+pydantic-settings
+python-dotenv
+email-validator
+httpx 
+phonenumbers
+pytest
+alembic

@@ -1,0 +1,59 @@
+services:
+
+  # User Management FastAPI Service
+  user_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: shopease_user_service
+
+    ports:
+      - "8012:8000"
+
+    env_file:
+      - .env
+
+    environment:
+      MYSQL_HOST: user_mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@user_mysql:3306/${MYSQL_DATABASE}
+
+    depends_on:
+      user_mysql:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+  # Separate MySQL Database for User Service
+  user_mysql:
+    image: mysql:8.0
+
+    container_name: shopease_user_mysql
+
+    ports:
+      - "3311:3306"
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      - shopease_user_mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+    restart: unless-stopped
+
+volumes:
+  shopease_user_mysql_data:
