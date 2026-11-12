@@ -1,8 +1,8 @@
 
 {
   "info": {
-    "name": "ShopEase User Service - Postman Collection",
-    "description": "API testing collection for ShopEase User Management Microservice. Includes profile CRUD, address CRUD, partial updates, default address, JWT authentication and automated response checks.",
+    "name": "ShopEase User Service - Complete API Tests",
+    "description": "Postman collection for testing ShopEase User Management Service: health, JWT authentication, profile CRUD, address CRUD, partial updates, default address and deactivation.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -15,12 +15,8 @@
       "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0Iiwicm9sZSI6IkNVU1RPTUVSIiwiaWF0IjoxNzk0Mzg2MTA1LCJleHAiOjE3OTQzODc5MDV9.bGlIXnDUb2lCOxxc7820gMBNlPlWkcag9F3aWbhtWeY"
     },
     {
-      "key": "profile_id",
-      "value": ""
-    },
-    {
       "key": "address_id",
-      "value": ""
+      "value": "4"
     }
   ],
   "item": [
@@ -28,7 +24,7 @@
       "name": "1. Health Check",
       "item": [
         {
-          "name": "Check User Service Health",
+          "name": "Health Check",
           "request": {
             "method": "GET",
             "header": [],
@@ -41,7 +37,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Health check returns 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Service status is healthy', function () { pm.expect(pm.response.json().status).to.eql('healthy'); });",
+                  "pm.test('Service is healthy', function () { pm.expect(pm.response.json().status).to.eql('healthy'); });",
                   "pm.test('Correct service name', function () { pm.expect(pm.response.json().service).to.eql('user-management'); });"
                 ]
               }
@@ -54,7 +50,7 @@
       "name": "2. Authentication Tests",
       "item": [
         {
-          "name": "Get Profile Without Token - Expected 401",
+          "name": "Missing JWT - Expect 401",
           "request": {
             "method": "GET",
             "header": [],
@@ -66,20 +62,20 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Missing token is rejected with 401', function () { pm.response.to.have.status(401); });"
+                  "pm.test('Missing token returns 401', function () { pm.response.to.have.status(401); });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Profile With Valid JWT",
+          "name": "Invalid JWT - Expect 401",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "value": "Bearer invalid.test.token"
               }
             ],
             "url": "{{base_url}}/api/users/profile"
@@ -90,8 +86,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Authenticated request is accepted', function () { pm.expect(pm.response.code).to.be.oneOf([200, 404]); });",
-                  "pm.test('Response is valid JSON', function () { pm.response.to.be.json; });"
+                  "pm.test('Invalid token returns 401', function () { pm.response.to.have.status(401); });"
                 ]
               }
             }
@@ -103,7 +98,7 @@
       "name": "3. User Profile Management",
       "item": [
         {
-          "name": "Create User Profile",
+          "name": "Create Profile",
           "request": {
             "method": "POST",
             "header": [
@@ -128,11 +123,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Profile created successfully', function () { pm.response.to.have.status(201); });",
-                  "pm.test('Profile response is JSON', function () { pm.response.to.be.json; });",
-                  "let data = pm.response.json();",
-                  "if (data.id) { pm.collectionVariables.set('profile_id', data.id); }",
-                  "pm.test('Profile ID is returned', function () { pm.expect(data.id).to.exist; });"
+                  "pm.test('Profile creation returns 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Profile response is JSON', function () { pm.response.to.be.json; });"
                 ]
               }
             }
@@ -157,7 +149,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Get profile returns 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Profile response is JSON', function () { pm.response.to.be.json; });"
+                  "pm.test('Profile response is JSON', function () { pm.response.to.be.json; });",
+                  "pm.test('Profile has an ID', function () { pm.expect(pm.response.json().id).to.exist; });"
                 ]
               }
             }
@@ -221,55 +214,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Profile PATCH returns 200', function () { pm.response.to.have.status(200); });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Delete My Profile",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": "{{base_url}}/api/users/profile"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Profile delete returns 200', function () { pm.response.to.have.status(200); });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Deactivate My Profile",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": "{{base_url}}/api/users/profile/deactivate"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Profile deactivation returns 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Profile partial update returns 200', function () { pm.response.to.have.status(200); });"
                 ]
               }
             }
@@ -306,10 +251,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Address created successfully', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Address creation returns 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Address response is JSON', function () { pm.response.to.be.json; });",
                   "let data = pm.response.json();",
-                  "if (data.id) { pm.collectionVariables.set('address_id', data.id); }",
-                  "pm.test('Address ID is returned', function () { pm.expect(data.id).to.exist; });"
+                  "pm.test('Address ID is returned', function () { pm.expect(data.id).to.exist; });",
+                  "if (data.id) { pm.collectionVariables.set('address_id', data.id); }"
                 ]
               }
             }
@@ -333,8 +279,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Get addresses returns 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
+                  "pm.test('Get all addresses returns 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Address list response is JSON', function () { pm.response.to.be.json; });"
                 ]
               }
             }
@@ -365,7 +311,7 @@
           ]
         },
         {
-          "name": "Update Address",
+          "name": "Update Address - PUT",
           "request": {
             "method": "PUT",
             "header": [
@@ -390,14 +336,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Address update returns 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Address PUT returns 200', function () { pm.response.to.have.status(200); });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Partially Update Address - City",
+          "name": "Partially Update Address - PATCH",
           "request": {
             "method": "PATCH",
             "header": [
@@ -422,7 +368,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Address partial update returns 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Address PATCH returns 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Updated city is Chennai', function () { pm.expect(pm.response.json().city).to.eql('Chennai'); });"
                 ]
               }
             }
@@ -471,6 +418,65 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Address delete returns 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Profile Deactivation - Run Separately at End",
+      "item": [
+        {
+          "name": "Deactivate My Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/users/profile/deactivate"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile deactivation returns 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Profile Delete - Alternative Cleanup",
+      "description": "Run this instead of profile deactivation, not after it. This operation may remove the profile.",
+      "item": [
+        {
+          "name": "Delete My Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/api/users/profile"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile delete returns 200', function () { pm.response.to.have.status(200); });"
                 ]
               }
             }
